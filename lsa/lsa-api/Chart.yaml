@@ -1,0 +1,30 @@
+annotations:
+  category: Infrastructure
+apiVersion: v2
+appVersion: 1.22.0
+dependencies:
+  - name: common
+    repository: https://charts.bitnami.com/bitnami
+    tags:
+      - bitnami-common
+    version: 1.x.x
+description: NGINX-enabled with PHP fastCGI (PHP-FMP) for Laravel application.
+engine: gotpl
+home: https://github.com/bitnami/charts/tree/master/bitnami/nginx
+icon: https://upload.wikimedia.org/wikipedia/commons/thumb/b/bf/Laravel-four-icon.png/241px-Laravel-four-icon.png
+keywords:
+  - php
+  - Laravel
+  - nginx
+  - http
+  - web
+  - www
+  - reverse proxy
+maintainers:
+  - name: Bitnami
+    url: https://github.com/bitnami/charts
+name: nginx
+sources:
+  - https://github.com/bitnami/bitnami-docker-nginx
+  - https://www.nginx.org
+version: 12.0.5

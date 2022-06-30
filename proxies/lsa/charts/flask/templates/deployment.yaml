@@ -1,0 +1,109 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "flask.fullname" . }}
+  labels:
+    {{- include "flask.labels" . | nindent 4 }}
+spec:
+  {{- if not .Values.autoscaling.enabled }}
+  replicas: {{ .Values.replicaCount }}
+  {{- end }}
+  selector:
+    matchLabels:
+      {{- include "flask.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      {{- with .Values.podAnnotations }}
+      annotations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      labels:
+        {{- include "flask.selectorLabels" . | nindent 8 }}
+    spec:
+      {{- with .Values.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      serviceAccountName: {{ include "flask.serviceAccountName" . }}
+      securityContext:
+        {{- toYaml .Values.podSecurityContext | nindent 8 }}
+      containers:
+        - name: {{ .Chart.Name }}
+          securityContext:
+            {{- toYaml .Values.securityContext | nindent 12 }}
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          env:
+            - name: "API_SECRET_KEY"
+              valueFrom:
+                secretKeyRef:
+                  key:  api_secret_key
+                  name: {{ .Release.Name }}-auth
+            - name: "SAML_PATH"
+              valueFrom:
+                secretKeyRef:
+                  key:  saml_path
+                  name: {{ .Release.Name }}-auth
+            - name: "GATEWAY_URL"
+              valueFrom:
+                secretKeyRef:
+                  key:  gateway_url
+                  name: {{ .Release.Name }}-auth
+            - name: "SESSION_COOKIE_DOMAIN"
+              valueFrom:
+                secretKeyRef:
+                  key:  session_cookie_domain
+                  name: {{ .Release.Name }}-auth
+            - name: "PROXY_DEBUG"
+              valueFrom:
+                secretKeyRef:
+                  key:  proxy_debug
+                  name: {{ .Release.Name }}-auth
+          ports:
+            - name: http
+              containerPort: 8000
+              protocol: TCP
+          livenessProbe:
+            httpGet:
+              # host: my-host
+              # scheme: HTTP
+              path: /test
+              port: 8000
+              httpHeaders:
+            initialDelaySeconds: 20
+            timeoutSeconds: 5
+          readinessProbe:
+            httpGet:
+              # host: my-host
+              # scheme: HTTP
+              path: /test
+              port: 8000
+              httpHeaders:
+            initialDelaySeconds: 20
+            timeoutSeconds: 5
+          resources:
+            {{- toYaml .Values.resources | nindent 12 }}
+          volumeMounts:
+            - name: proxy-gateway-saml-claim
+              mountPath: /saml
+      volumes:
+        - name: proxy-gateway-saml-claim
+          configMap:
+            name: {{ .Release.Name }}-configmap
+            items:
+              - key: settings.json
+                path: settings.json
+              - key: advanced_settings.json
+                path: advanced_settings.json
+      {{- with .Values.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}

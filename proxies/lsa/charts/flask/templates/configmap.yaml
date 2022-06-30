@@ -1,0 +1,9 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ .Release.Name }}-configmap
+data:
+  settings.json: |-
+{{ .Files.Get "saml/settings.json" | indent 4}}
+  advanced_settings.json: |-
+{{ .Files.Get "saml/advanced_settings.json" | indent 4}}
